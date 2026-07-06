@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Commission Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF3EE;
+    --card:#FFFFFF;
+    --ink:#1F2E28;
+    --ink-soft:#4A5C54;
+    --teal:#2F6F62;
+    --teal-deep:#1F4E44;
+    --gold:#B8862B;
+    --brick:#A64B3E;
+    --line:#D9E1DB;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:20px 14px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  /* Header + stamp */
+  header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;gap:16px;}
+  h1{
+    font-family:'Zilla Slab',serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 4px;
+    color:var(--teal-deep);
+  }
+  .subtitle{font-size:13px;color:var(--ink-soft);}
+
+  .stamp{
+    width:96px;height:96px;border-radius:50%;
+    border:3px solid var(--brick);
+    color:var(--brick);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transform:rotate(-8deg);
+    font-family:'IBM Plex Mono',monospace;
+    text-align:center;
+    flex-shrink:0;
+    opacity:0.9;
+  }
+  .stamp .label{font-size:8px;letter-spacing:1.5px;font-weight:600;}
+  .stamp .amt{font-size:14px;font-weight:600;line-height:1.2;margin-top:2px;}
+
+  /* Month nav */
+  .month-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:16px;
+  }
+  .month-nav button{
+    background:none;border:none;color:var(--teal);font-size:18px;cursor:pointer;
+    padding:4px 10px;
+  }
+  .month-nav .month-label{
+    font-family:'Zilla Slab',serif;font-weight:600;font-size:16px;
+  }
+
+  /* Summary cards */
+  .summary{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;
+  }
+  .sum-card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:12px 10px;text-align:center;
+  }
+  .sum-card .val{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:17px;color:var(--teal-deep);
+  }
+  .sum-card .lbl{font-size:10.5px;color:var(--ink-soft);margin-top:3px;letter-spacing:0.3px;}
+
+  /* Add entry form */
+  .add-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:22px;
+  }
+  .add-form .row{display:flex;gap:10px;margin-bottom:10px;}
+  .add-form label{font-size:11px;color:var(--ink-soft);display:block;margin-bottom:4px;letter-spacing:0.3px;}
+  .add-form input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    background:#FBFCFB;
+    color:var(--ink);
+  }
+  .add-form input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .commission-preview{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;color:var(--gold);
+    margin-bottom:12px;
+    min-height:16px;
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--teal-deep);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:11px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn-primary:hover{background:var(--teal);}
+
+  .chip-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .chip{
+    border:1px solid var(--line);
+    background:#FBFCFB;
+    color:var(--ink-soft);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--teal-deep);
+    border-color:var(--teal-deep);
+    color:#fff;
+  }
+
+  .comp-category{margin-bottom:14px;}
+  .comp-category .cat-title{
+    font-size:11.5px;color:var(--teal-deep);font-weight:600;
+    display:block;margin-bottom:6px;letter-spacing:0.2px;
+  }
+  .comp-row{display:flex;gap:8px;margin-bottom:6px;align-items:center;}
+  .comp-row .comp-desc{flex:2;}
+  .comp-row .comp-charge{flex:1;}
+  .comp-row input{
+    border:1px solid var(--line);border-radius:8px;
+    padding:8px 9px;font-size:13px;background:#FBFCFB;color:var(--ink);
+    font-family:'Inter',sans-serif;width:100%;
+  }
+  .comp-row-remove{
+    background:none;border:none;color:var(--brick);font-size:15px;
+    cursor:pointer;opacity:0.6;padding:2px 4px;flex-shrink:0;
+  }
+  .comp-row-remove:hover{opacity:1;}
+  .comp-add{
+    background:none;border:none;color:var(--teal);font-size:12px;
+    font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;padding:2px 0;
+  }
+
+  .unique-panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:18px;
+  }
+  .unique-cat{margin-bottom:8px;}
+  .unique-cat:last-child{margin-bottom:0;}
+  .unique-cat .cat-name{
+    font-size:10.5px;color:var(--ink-soft);letter-spacing:0.4px;
+    text-transform:uppercase;margin-bottom:4px;
+  }
+  .unique-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .unique-tag{
+    font-size:11.5px;color:var(--teal-deep);background:#E4EEEA;
+    border-radius:10px;padding:3px 9px;
+  }
+
+  .entry-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+  .entry-tag{
+    font-size:10px;
+    color:var(--teal-deep);
+    background:#E4EEEA;
+    border-radius:10px;
+    padding:2px 8px;
+    letter-spacing:0.2px;
+  }
+
+  /* Ledger list */
+  .ledger-title{
+    font-family:'Zilla Slab',serif;font-weight:600;font-size:15px;
+    color:var(--teal-deep);
+    margin:0 0 10px 2px;
+  }
+  .day-group{margin-bottom:16px;}
+  .day-header{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:0 4px 6px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:8px;
+  }
+  .day-header .day-date{
+    font-family:'Zilla Slab',serif;font-weight:600;font-size:13.5px;color:var(--ink);
+  }
+  .day-header .day-total{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);
+  }
+  .day-header .day-total b{color:var(--gold);}
+  .entry{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--teal);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;
+    gap:10px;
+  }
+  .entry .pname{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .entry .spent{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .entry .commission{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    color:var(--gold);
+    font-size:15px;
+    white-space:nowrap;
+  }
+  .entry .del{
+    background:none;border:none;color:var(--brick);
+    font-size:13px;cursor:pointer;opacity:0.6;padding:4px 6px;
+  }
+  .entry .del:hover{opacity:1;}
+
+  .empty-state{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    padding:30px 10px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+  }
+
+  .share-btn{
+    width:100%;
+    background:none;
+    border:1px solid var(--teal);
+    color:var(--teal-deep);
+    border-radius:8px;
+    padding:10px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .share-btn:hover{background:#fff;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--teal-deep);color:#fff;
+    padding:9px 16px;border-radius:8px;font-size:13px;
+    opacity:0;pointer-events:none;transition:opacity 0.25s;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Commission Ledger</h1>
+      <div class="subtitle">10% per outpatient visit &middot; tracked daily</div>
+    </div>
+    <div class="stamp">
+      <div class="label">DUE THIS<br/>MONTH</div>
+      <div class="amt" id="stampAmt">Ksh 0</div>
+    </div>
+  </header>
+
+  <div class="month-nav">
+    <button id="prevMonth">&larr;</button>
+    <div class="month-label" id="monthLabel">—</div>
+    <button id="nextMonth">&rarr;</button>
+  </div>
+
+  <div class="summary">
+    <div class="sum-card">
+      <div class="val" id="sumPatients">0</div>
+      <div class="lbl">PATIENTS</div>
+    </div>
+    <div class="sum-card">
+      <div class="val" id="sumRevenue">0</div>
+      <div class="lbl">TOTAL SPEND</div>
+    </div>
+    <div class="sum-card">
+      <div class="val" id="sumCommission">0</div>
+      <div class="lbl">YOUR 10%</div>
+    </div>
+  </div>
+
+  <div class="add-form">
+    <div class="row">
+      <div style="flex:1;">
+        <label for="patientName">Patient name</label>
+        <input type="text" id="patientName" placeholder="As it appears in hospital system" />
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:1;">
+        <label for="entryDate">Date</label>
+        <input type="date" id="entryDate" />
+      </div>
+    </div>
+    <div id="compCategories"></div>
+    <div class="commission-preview" id="commissionPreview"></div>
+    <button class="btn-primary" id="addBtn">Log Visit</button>
+  </div>
+
+  <div class="ledger-title" id="uniqueCompTitle" style="display:none;">Unique components this month (for oversight)</div>
+  <div id="uniqueComponents"></div>
+
+  <div class="ledger-title">Entries this month</div>
+  <div id="entryList"></div>
+
+  <button class="share-btn" id="shareBtn">Copy monthly summary for WhatsApp</button>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'commission_entries';
+let entries = [];
+let currentMonth = new Date();
+currentMonth.setDate(1);
+
+const dateInput = document.getElementById('entryDate');
+const nameInput = document.getElementById('patientName');
+const preview = document.getElementById('commissionPreview');
+const addBtn = document.getElementById('addBtn');
+const entryList = document.getElementById('entryList');
+const monthLabel = document.getElementById('monthLabel');
+const stampAmt = document.getElementById('stampAmt');
+const toast = document.getElementById('toast');
+const compCategories = document.getElementById('compCategories');
+
+const CATEGORIES = ['Imaging', 'Lab', 'Injectables', 'Procedures'];
+const PLACEHOLDERS = {
+  Imaging: 'e.g. X-ray right foot',
+  Lab: 'e.g. Malaria test',
+  Injectables: 'e.g. IV Paracetamol',
+  Procedures: 'e.g. Wound dressing'
+};
+
+function buildCompRow(){
+  const row = document.createElement('div');
+  row.className = 'comp-row';
+  row.innerHTML = `
+    <input type="text" class="comp-desc" placeholder="${PLACEHOLDERS[this]}" />
+    <input type="number" class="comp-charge" placeholder="Ksh" min="0" step="1" />
+    <button type="button" class="comp-row-remove" title="Remove">&#10005;</button>
+  `;
+  return row;
+}
+
+function initComponentForm(){
+  compCategories.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const catDiv = document.createElement('div');
+    catDiv.className = 'comp-category';
+    catDiv.dataset.category = cat;
+    catDiv.innerHTML = `<label class="cat-title">${cat}</label><div class="comp-rows"></div><button type="button" class="comp-add">+ Add ${cat.toLowerCase()} charge</button>`;
+    compCategories.appendChild(catDiv);
+    const rowsContainer = catDiv.querySelector('.comp-rows');
+    rowsContainer.appendChild(buildCompRow.call(cat));
+  });
+}
+initComponentForm();
+
+compCategories.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('comp-add')){
+    const catDiv = e.target.closest('.comp-category');
+    const cat = catDiv.dataset.category;
+    catDiv.querySelector('.comp-rows').appendChild(buildCompRow.call(cat));
+  }
+  if(e.target.classList.contains('comp-row-remove')){
+    e.target.closest('.comp-row').remove();
+  }
+});
+
+compCategories.addEventListener('input', updatePreview);
+
+function readComponents(){
+  const components = {};
+  let total = 0;
+  const incomplete = [];
+  compCategories.querySelectorAll('.comp-category').forEach(catDiv => {
+    const cat = catDiv.dataset.category;
+    const items = [];
+    catDiv.querySelectorAll('.comp-row').forEach(row => {
+      const desc = row.querySelector('.comp-desc').value.trim();
+      const chargeRaw = row.querySelector('.comp-charge').value;
+      const charge = parseFloat(chargeRaw);
+      const hasDesc = !!desc;
+      const hasCharge = chargeRaw !== '' && !isNaN(charge) && charge > 0;
+      if(hasDesc && hasCharge){
+        items.push({desc, charge});
+        total += charge;
+      } else if(hasDesc || hasCharge){
+        incomplete.push(cat);
+      }
+    });
+    if(items.length) components[cat] = items;
+  });
+  return {components, total, incomplete};
+}
+
+function resetComponentForm(){
+  initComponentForm();
+}
+
+function updatePreview(){
+  const {total, incomplete} = readComponents();
+  if(incomplete.length){
+    preview.textContent = 'Fill both description and charge for: ' + [...new Set(incomplete)].join(', ');
+    return;
+  }
+  if(total > 0){
+    preview.textContent = `Total: ${fmt(total)} · Your commission: ${fmt(total * 0.10)}`;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+function todayISO(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+}
+dateInput.value = todayISO();
+
+function fmt(n){
+  return 'Ksh ' + Math.round(n).toLocaleString('en-KE');
+}
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1800);
+}
+
+async function loadEntries(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    entries = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    entries = [];
+  }
+  render();
+}
+
+async function saveEntries(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(entries), false);
+  }catch(e){
+    showToast('Could not save — try again');
+  }
+}
+
+addBtn.addEventListener('click', async ()=>{
+  const date = dateInput.value;
+  const patientName = nameInput.value.trim();
+  const {components, total, incomplete} = readComponents();
+
+  if(!patientName){ showToast('Enter the patient name'); return; }
+  if(!date){ showToast('Pick a date'); return; }
+  if(incomplete.length){ showToast('Fill both description and charge for: ' + [...new Set(incomplete)].join(', ')); return; }
+  if(total <= 0){ showToast('Add at least one component with a charge'); return; }
+
+  entries.push({
+    id: Date.now().toString(36),
+    date,
+    patientName,
+    amount: total,
+    components
+  });
+  entries.sort((a,b)=> b.date.localeCompare(a.date));
+  await saveEntries();
+  nameInput.value = '';
+  preview.textContent = '';
+  resetComponentForm();
+  render();
+  showToast('Visit logged');
+});
+
+async function deleteEntry(id){
+  entries = entries.filter(e => e.id !== id);
+  await saveEntries();
+  render();
+}
+
+function entryTagsHTML(components){
+  if(!components) return '';
+  const keys = Object.keys(components).filter(k => components[k] && components[k].length);
+  if(!keys.length) return '';
+  return `<div class="entry-tags">${keys.map(k =>
+    components[k].map(item => `<span class="entry-tag">${k}: ${item.desc} (${fmt(item.charge)})</span>`).join('')
+  ).join('')}</div>`;
+}
+
+function renderUniqueComponents(monthEntries){
+  const cats = { Imaging:new Set(), Lab:new Set(), Injectables:new Set(), Procedures:new Set() };
+  monthEntries.forEach(e => {
+    if(!e.components) return;
+    Object.keys(cats).forEach(cat => {
+      if(e.components[cat]){
+        e.components[cat].forEach(item => cats[cat].add(item.desc));
+      }
+    });
+  });
+
+  const activeCats = Object.keys(cats).filter(cat => cats[cat].size > 0);
+  const titleEl = document.getElementById('uniqueCompTitle');
+  const panelEl = document.getElementById('uniqueComponents');
+
+  if(activeCats.length === 0){
+    titleEl.style.display = 'none';
+    panelEl.innerHTML = '';
+    return;
+  }
+
+  titleEl.style.display = 'block';
+  panelEl.innerHTML = `<div class="unique-panel">${activeCats.map(cat => `
+    <div class="unique-cat">
+      <div class="cat-name">${cat}</div>
+      <div class="unique-tags">${[...cats[cat]].map(v => `<span class="unique-tag">${v}</span>`).join('')}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function monthKey(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function entriesForMonth(d){
+  const key = monthKey(d);
+  return entries.filter(e => e.date.slice(0,7) === key);
+}
+
+function render(){
+  monthLabel.textContent = currentMonth.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+  const monthEntries = entriesForMonth(currentMonth);
+  const totalRevenue = monthEntries.reduce((s,e)=> s + e.amount, 0);
+  const totalCommission = totalRevenue * 0.10;
+
+  document.getElementById('sumPatients').textContent = monthEntries.length;
+  document.getElementById('sumRevenue').textContent = fmt(totalRevenue);
+  document.getElementById('sumCommission').textContent = fmt(totalCommission);
+  stampAmt.textContent = fmt(totalCommission);
+
+  renderUniqueComponents(monthEntries);
+
+  if(monthEntries.length === 0){
+    entryList.innerHTML = '<div class="empty-state">No visits logged for this month yet.</div>';
+    return;
+  }
+
+  // group by date
+  const byDate = {};
+  monthEntries.forEach(e => {
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+  const dates = Object.keys(byDate).sort((a,b)=> b.localeCompare(a));
+
+  entryList.innerHTML = dates.map(date => {
+    const dayEntries = byDate[date];
+    const dayTotal = dayEntries.reduce((s,e)=> s + e.amount, 0);
+    const dayCommission = dayTotal * 0.10;
+    const dateLabel = new Date(date+'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+
+    const rows = dayEntries.map(e => `
+      <div class="entry">
+        <div>
+          <div class="pname">${e.patientName}</div>
+          <div class="spent">Spent ${fmt(e.amount)}</div>
+          ${entryTagsHTML(e.components)}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="commission">${fmt(e.amount * 0.10)}</div>
+          <button class="del" data-id="${e.id}" title="Delete">&#10005;</button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="day-group">
+        <div class="day-header">
+          <span class="day-date">${dateLabel} &middot; ${dayEntries.length} patient${dayEntries.length>1?'s':''}</span>
+          <span class="day-total">Day total ${fmt(dayTotal)} &middot; commission <b>${fmt(dayCommission)}</b></span>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }).join('');
+
+  entryList.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteEntry(btn.dataset.id));
+  });
+}
+
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()-1);
+  render();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()+1);
+  render();
+});
+
+document.getElementById('shareBtn').addEventListener('click', async ()=>{
+  const monthEntries = entriesForMonth(currentMonth);
+  const totalRevenue = monthEntries.reduce((s,e)=> s + e.amount, 0);
+  const totalCommission = totalRevenue * 0.10;
+  const label = currentMonth.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+  const cats = { Imaging:new Set(), Lab:new Set(), Injectables:new Set(), Procedures:new Set() };
+  monthEntries.forEach(e => {
+    if(!e.components) return;
+    Object.keys(cats).forEach(cat => {
+      if(e.components[cat]){
+        e.components[cat].forEach(item => cats[cat].add(item.desc));
+      }
+    });
+  });
+  const activeCats = Object.keys(cats).filter(cat => cats[cat].size > 0);
+  const breakdown = activeCats.length
+    ? '\n\nComponents used (unique):\n' + activeCats.map(cat => `- ${cat}: ${[...cats[cat]].join(', ')}`).join('\n')
+    : '';
+
+  const text = `*Commission Summary — ${label}*\nPatients seen: ${monthEntries.length}\nTotal patient spend: ${fmt(totalRevenue)}\nCommission owed (10%): ${fmt(totalCommission)}${breakdown}`;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('Copied — paste into WhatsApp');
+  }catch(e){
+    showToast('Could not copy — select manually');
+  }
+});
+
+loadEntries();
+</script>
+</body>
+</html>
